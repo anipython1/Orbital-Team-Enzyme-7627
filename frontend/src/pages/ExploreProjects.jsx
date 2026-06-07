@@ -1,0 +1,53 @@
+import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
+import { ArrowLeft, GraduationCap } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import ProjectCard from "@/components/ProjectCard"
+import { api } from "@/lib/api"
+
+/**
+ * Public page reached from the "Explore Projects" button on the landing page.
+ * Shows all available projects (no login needed).
+ */
+export default function ExploreProjects() {
+  const [projects, setProjects] = useState([])
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    api.getProjects().then(setProjects).catch((err) => setError(err.message))
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-muted/40">
+      <header className="border-b bg-background">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-2 font-semibold">
+            <GraduationCap className="size-6" />
+            FindMyFYP
+          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/">
+              <ArrowLeft /> Back to Home
+            </Link>
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <h1 className="text-2xl font-bold">Explore Projects</h1>
+        <p className="mt-1 text-muted-foreground">
+          Browse all available Final Year Projects. Register as a student to
+          get personalised matches!
+        </p>
+
+        {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      </main>
+    </div>
+  )
+}

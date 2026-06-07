@@ -1,0 +1,11 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/findmyfyp.db
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Local tooling
+.claude/
