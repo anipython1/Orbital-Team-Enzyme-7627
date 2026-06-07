@@ -1,6 +1,6 @@
 # FindMyFYP (MVP)
 
-> Find the right project. Build the right skills.
+> Find the right project. Build the right skills.t
 
 FindMyFYP is a web platform that helps university students discover suitable
 **Final Year Projects (FYPs)** based on the skills they already have, the
