@@ -55,6 +55,18 @@ class MatchRequest(BaseModel):
     interests: str
 
 
+class ProjectRequest(BaseModel):
+    title: str
+    supervisor_name: str
+    difficulty: str
+    description: str
+    required_skills: str
+    languages: str
+    prerequisite_knowledge: str
+    expected_deliverables: str
+    domain_keywords: str
+
+
 
 
 @app.post("/api/register")
@@ -99,6 +111,33 @@ def list_projects():
     projects = conn.execute("SELECT * FROM projects").fetchall()
     conn.close()
     return [dict(p) for p in projects]
+
+
+@app.post("/api/projects")
+def create_project(request: ProjectRequest):
+    """Create a new project (used by the supervisor 'Submit Project' form)."""
+    conn = get_connection()
+    cursor = conn.execute(
+        """INSERT INTO projects
+           (title, supervisor_name, description, required_skills, languages,
+            prerequisite_knowledge, expected_deliverables, domain_keywords, difficulty)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            request.title,
+            request.supervisor_name,
+            request.description,
+            request.required_skills,
+            request.languages,
+            request.prerequisite_knowledge,
+            request.expected_deliverables,
+            request.domain_keywords,
+            request.difficulty,
+        ),
+    )
+    conn.commit()
+    project_id = cursor.lastrowid
+    conn.close()
+    return {"id": project_id, **request.model_dump()}
 
 
 @app.post("/api/match")
