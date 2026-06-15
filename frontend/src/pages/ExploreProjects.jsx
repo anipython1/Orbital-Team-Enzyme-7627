@@ -3,15 +3,17 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, GraduationCap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ProjectCard from "@/components/ProjectCard"
+import ProjectDetailModal from "@/components/ProjectDetailModal"
 import { api } from "@/lib/api"
 
 /**
- * Public page reached from the "Explore Projects" button on the landing page.
- * Shows all available projects (no login needed).
+ 
+ * Shows all available projects (no login needed)
  */
 export default function ExploreProjects() {
   const [projects, setProjects] = useState([])
   const [error, setError] = useState("")
+  const [selectedProject, setSelectedProject] = useState(null)
 
   useEffect(() => {
     api.getProjects().then(setProjects).catch((err) => setError(err.message))
@@ -44,10 +46,19 @@ export default function ExploreProjects() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onClick={() => setSelectedProject(project)}
+            />
           ))}
         </div>
       </main>
+
+      <ProjectDetailModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   )
 }
