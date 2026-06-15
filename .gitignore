@@ -7,5 +7,3 @@ backend/findmyfyp.db
 frontend/node_modules/
 frontend/dist/
 
-# Local tooling
-.claude/

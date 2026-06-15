@@ -8,16 +8,21 @@ const difficultyVariant = {
   Advanced: "destructive",
 }
 
-/**
- * One project card. If the project has a `match_score`,
- * a percentage badge and progress bar are shown too.
- */
-export default function ProjectCard({ project }) {
+
+export default function ProjectCard({ project, onClick }) {
   const skills = project.required_skills.split(",").map((s) => s.trim())
   const hasScore = project.match_score !== undefined
 
   return (
-    <Card className="gap-4">
+    <Card
+      className={
+        "gap-4" +
+        (onClick
+          ? " cursor-pointer transition-shadow hover:shadow-md hover:border-primary/40"
+          : "")
+      }
+      onClick={onClick}
+    >
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base">{project.title}</CardTitle>
