@@ -52,6 +52,9 @@ export default function Landing() {
           <Button size="lg" variant="outline" asChild>
             <Link to="/submit-project">Submit Project (For supervisors)</Link>
           </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link to="/statistics">Statistics (For admin)</Link>
+          </Button>
         </div>
 
         {/* Feature cards */}

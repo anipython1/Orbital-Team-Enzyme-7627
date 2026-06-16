@@ -142,6 +142,39 @@ def create_project(request: ProjectRequest):
     return {"id": project_id, **request.model_dump()}
 
 
+@app.get("/api/stats")
+def get_stats():
+    """Return basic site statistics (used by the admin Statistics page)."""
+    conn = get_connection()
+    total_projects = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
+    total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    role_rows = conn.execute(
+        "SELECT role, COUNT(*) AS count FROM users GROUP BY role"
+    ).fetchall()
+    keyword_rows = conn.execute("SELECT domain_keywords FROM projects").fetchall()
+    conn.close()
+
+    # Count how often each domain keyword 
+    keyword_counts = {}
+    for row in keyword_rows:
+        for keyword in text_to_keywords(row["domain_keywords"]):
+            keyword_counts[keyword] = keyword_counts.get(keyword, 0) + 1
+
+    top_keywords = sorted(
+        ({"keyword": kw, "count": count} for kw, count in keyword_counts.items()),
+        key=lambda k: k["count"],
+        reverse=True,
+    )
+
+    return {
+        "total_projects": total_projects,
+        "total_users": total_users,
+        "total_keywords": len(keyword_counts),
+        "users_by_role": {row["role"]: row["count"] for row in role_rows},
+        "top_keywords": top_keywords,
+    }
+
+
 @app.post("/api/match")
 def match_projects(request: MatchRequest):
     """Score every project against the student's skills/interests

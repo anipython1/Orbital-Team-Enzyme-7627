@@ -159,7 +159,7 @@ python -m uvicorn main:app --reload
 ### 2. Frontend (React)
 
 
-```powershell
+```
 cd frontend
 npm install
 npm run dev

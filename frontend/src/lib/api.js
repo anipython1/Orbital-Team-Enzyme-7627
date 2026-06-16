@@ -21,4 +21,5 @@ export const api = {
   getProjects: () => request("/projects"),
   createProject: (project) => request("/projects", { method: "POST", body: JSON.stringify(project) }),
   matchProjects: (profile) => request("/match", { method: "POST", body: JSON.stringify(profile) }),
+  getStats: () => request("/stats"),
 }

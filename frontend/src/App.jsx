@@ -5,6 +5,7 @@ import Register from "./pages/Register"
 import StudentDashboard from "./pages/StudentDashboard"
 import ExploreProjects from "./pages/ExploreProjects"
 import SubmitProject from "./pages/SubmitProject"
+import Statistics from "./pages/Statistics"
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/dashboard" element={<StudentDashboard />} />
       <Route path="/explore" element={<ExploreProjects />} />
       <Route path="/submit-project" element={<SubmitProject />} />
+      <Route path="/statistics" element={<Statistics />} />
     </Routes>
   )
 }
