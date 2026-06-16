@@ -66,6 +66,17 @@ export default function ProjectDetailModal({ project, onClose }) {
             <p className="text-sm text-muted-foreground">
               Supervisor: {project.supervisor_name}
             </p>
+            {project.contact_email && (
+              <p className="text-sm text-muted-foreground">
+                Contact:{" "}
+                <a
+                  href={`mailto:${project.contact_email}`}
+                  className="underline hover:text-foreground"
+                >
+                  {project.contact_email}
+                </a>
+              </p>
+            )}
             <Badge
               className="mt-1"
               variant={difficultyVariant[project.difficulty] || "outline"}

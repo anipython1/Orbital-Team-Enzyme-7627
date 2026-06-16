@@ -4,6 +4,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import StudentDashboard from "./pages/StudentDashboard"
 import ExploreProjects from "./pages/ExploreProjects"
+import SubmitProject from "./pages/SubmitProject"
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<StudentDashboard />} />
       <Route path="/explore" element={<ExploreProjects />} />
+      <Route path="/submit-project" element={<SubmitProject />} />
     </Routes>
   )
 }

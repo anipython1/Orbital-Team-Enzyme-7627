@@ -19,5 +19,6 @@ export const api = {
   register: (user) => request("/register", { method: "POST", body: JSON.stringify(user) }),
   login: (credentials) => request("/login", { method: "POST", body: JSON.stringify(credentials) }),
   getProjects: () => request("/projects"),
+  createProject: (project) => request("/projects", { method: "POST", body: JSON.stringify(project) }),
   matchProjects: (profile) => request("/match", { method: "POST", body: JSON.stringify(profile) }),
 }

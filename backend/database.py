@@ -40,12 +40,18 @@ def init_db():
         columns = [row[1] for row in cursor.execute("PRAGMA table_info(projects)")]
         if "domain_keywords" not in columns:
             cursor.execute("DROP TABLE projects")
+        elif "contact_email" not in columns:
+            # Add the new column to an existing table without losing data.
+            cursor.execute(
+                "ALTER TABLE projects ADD COLUMN contact_email TEXT NOT NULL DEFAULT ''"
+            )
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS projects (
             id                     INTEGER PRIMARY KEY AUTOINCREMENT,
             title                  TEXT NOT NULL,
             supervisor_name        TEXT NOT NULL,
+            contact_email          TEXT NOT NULL,   -- supervisor email students can reach out to
             description            TEXT NOT NULL,
             required_skills        TEXT NOT NULL,   -- technical skills, comma separated e.g. "Python, SQL"
             languages              TEXT NOT NULL,   -- programming languages, comma separated
@@ -63,6 +69,7 @@ def init_db():
             (
                 "Smart Attendance System using Face Recognition",
                 "Dr. Aisha Rahman",
+                "aisha.rahman@university.edu",
                 "Build a web application that marks student attendance automatically "
                 "using face recognition through a webcam.",
                 "Python, OpenCV, Machine Learning, Flask",
@@ -75,6 +82,7 @@ def init_db():
             (
                 "E-Commerce Website for Campus Bookstore",
                 "Mr. Daniel Tan",
+                "daniel.tan@university.edu",
                 "Develop an online store where students can browse, search and buy "
                 "textbooks. Includes a shopping cart and order history.",
                 "React, JavaScript, Node.js, SQL",
@@ -87,6 +95,7 @@ def init_db():
             (
                 "Mental Health Chatbot for Students",
                 "Dr. Sarah Lim",
+                "sarah.lim@university.edu",
                 "Create a friendly chatbot that answers common mental health questions "
                 "and points students to counselling resources.",
                 "Python, NLP, Machine Learning, APIs",
@@ -99,6 +108,7 @@ def init_db():
             (
                 "Mobile App for Food Waste Reduction",
                 "Dr. Kumar Velu",
+                "kumar.velu@university.edu",
                 "A mobile app that connects campus cafeterias with students to share "
                 "surplus food and reduce waste.",
                 "Flutter, Firebase, Mobile Development, UI Design",
@@ -111,6 +121,7 @@ def init_db():
             (
                 "Student Result Analytics Dashboard",
                 "Ms. Nurul Huda",
+                "nurul.huda@university.edu",
                 "Build a dashboard that visualises student grades and trends using "
                 "charts so lecturers can spot struggling students early.",
                 "Python, Data Analysis, SQL, Data Visualization",
@@ -123,6 +134,7 @@ def init_db():
             (
                 "IoT Smart Parking System",
                 "Dr. James Wong",
+                "james.wong@university.edu",
                 "Use sensors and a web dashboard to show available parking spots on "
                 "campus in real time.",
                 "IoT, Arduino, Python, Web Development",
@@ -135,6 +147,7 @@ def init_db():
             (
                 "Fake News Detection System",
                 "Dr. Aisha Rahman",
+                "aisha.rahman@university.edu",
                 "Train a machine learning model to classify news articles as real or "
                 "fake, with a simple web interface to test articles.",
                 "Python, Machine Learning, NLP, Data Analysis",
@@ -147,6 +160,7 @@ def init_db():
             (
                 "University Event Management Portal",
                 "Mr. Daniel Tan",
+                "daniel.tan@university.edu",
                 "A website where clubs can post events and students can register, "
                 "with QR-code check-in on event day.",
                 "React, JavaScript, SQL, Web Development",
@@ -159,9 +173,9 @@ def init_db():
         ]
         cursor.executemany(
             """INSERT INTO projects
-               (title, supervisor_name, description, required_skills, languages,
+               (title, supervisor_name, contact_email, description, required_skills, languages,
                 prerequisite_knowledge, expected_deliverables, domain_keywords, difficulty)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             sample_projects,
         )
 

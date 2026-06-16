@@ -58,6 +58,7 @@ class MatchRequest(BaseModel):
 class ProjectRequest(BaseModel):
     title: str
     supervisor_name: str
+    contact_email: str
     difficulty: str
     description: str
     required_skills: str
@@ -119,12 +120,13 @@ def create_project(request: ProjectRequest):
     conn = get_connection()
     cursor = conn.execute(
         """INSERT INTO projects
-           (title, supervisor_name, description, required_skills, languages,
+           (title, supervisor_name, contact_email, description, required_skills, languages,
             prerequisite_knowledge, expected_deliverables, domain_keywords, difficulty)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             request.title,
             request.supervisor_name,
+            request.contact_email,
             request.description,
             request.required_skills,
             request.languages,
