@@ -50,7 +50,7 @@ export default function Landing() {
             <Link to="/explore">Explore Projects</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link to="/submit-project">Submit Project</Link>
+            <Link to="/submit-project">Submit Project (For supervisors)</Link>
           </Button>
         </div>
 
