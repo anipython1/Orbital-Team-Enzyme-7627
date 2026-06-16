@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ProjectCard from "@/components/ProjectCard"
+import ProjectDetailModal from "@/components/ProjectDetailModal"
 import { api } from "@/lib/api"
 import { getUser, logout } from "@/lib/auth"
 
@@ -19,6 +20,7 @@ export default function StudentDashboard() {
   const [results, setResults] = useState(null) // null = not searched yet
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [selectedProject, setSelectedProject] = useState(null)
 
   // If nobody is logged in, send them to the login page.
   useEffect(() => {
@@ -131,12 +133,21 @@ export default function StudentDashboard() {
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {results.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => setSelectedProject(project)}
+                />
               ))}
             </div>
           </section>
         )}
       </main>
+
+      <ProjectDetailModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   )
 }
