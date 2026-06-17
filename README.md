@@ -146,9 +146,8 @@ Database
 - SQLite
 
 
-### 1. Backend (FastAPI)
+# 1. Backend (FastAPI)
 
-```powershell
 cd backend
 python -m venv venv
 venv\Scripts\activate
@@ -156,8 +155,7 @@ pip install -r requirements.txt
 python -m uvicorn main:app --reload
 ```
 
-### 2. Frontend (React)
-
+# 2. Frontend (React)
 
 ```
 cd frontend

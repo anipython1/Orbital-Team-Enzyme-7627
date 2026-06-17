@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { GraduationCap, LogOut, Search } from "lucide-react"
+import { GraduationCap, LogOut, Search, FilePlus, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -73,6 +73,25 @@ export default function StudentDashboard() {
         <p className="mt-1 text-muted-foreground">
           Tell us about yourself and we&apos;ll find projects that match.
         </p>
+
+        {/* Supervisor: submit a project */}
+        <Card
+          className="mt-6 cursor-pointer transition-colors hover:bg-accent"
+          onClick={() => navigate("/submit-project")}
+        >
+          <CardContent className="flex items-center justify-between gap-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <FilePlus className="size-5" />
+              </div>
+              <div>
+                <p className="font-semibold">Submit a Project</p>
+                <p className="text-sm text-muted-foreground">For supervisors</p>
+              </div>
+            </div>
+            <ArrowRight className="size-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
 
         {/* Profile form */}
         <Card className="mt-6">
