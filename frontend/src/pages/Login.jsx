@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { GraduationCap } from "lucide-react"
+import { GraduationCap, User, Briefcase, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [role, setRole] = useState("") // chosen first: student / supervisor / admin
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -40,6 +41,41 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Step 1: choose a role before showing the login form.
+  if (!role) {
+    const roles = [
+      { value: "student", label: "Student", icon: User },
+      { value: "supervisor", label: "Supervisor", icon: Briefcase },
+      { value: "admin", label: "Administrator", icon: ShieldCheck },
+    ]
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center">
+            <Link to="/" className="mx-auto mb-2">
+              <GraduationCap className="size-8" />
+            </Link>
+            <CardTitle className="text-2xl">Login as</CardTitle>
+            <CardDescription>Choose your role to continue</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {roles.map((r) => (
+              <Button
+                key={r.value}
+                variant="outline"
+                className="h-12 justify-start gap-3 text-base"
+                onClick={() => setRole(r.value)}
+              >
+                <r.icon className="size-5" />
+                {r.label}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
