@@ -22,10 +22,27 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
 
+  const isSupervisor = user?.role === "supervisor"
+
   // If nobody is logged in, send them to the login page.
   useEffect(() => {
     if (!user) navigate("/login")
   }, [user, navigate])
+
+  // Supervisors don't fill in a profile
+  useEffect(() => {
+    if (!isSupervisor) return
+    let active = true
+    setLoading(true)
+    api
+      .getProjects()
+      .then((projects) => active && setResults(projects))
+      .catch((err) => active && setError(err.message))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [isSupervisor])
 
   if (!user) return null
 
@@ -71,29 +88,34 @@ export default function StudentDashboard() {
         {/* Welcome message */}
         <h1 className="text-2xl font-bold">Welcome, {user.name}! 👋</h1>
         <p className="mt-1 text-muted-foreground">
-          Tell us about yourself and we&apos;ll find projects that match.
+          {isSupervisor
+            ? "Here are all the available projects."
+            : "Tell us about yourself and we'll find projects that match."}
         </p>
 
-        {/* Supervisor: submit a project */}
-        <Card
-          className="mt-6 cursor-pointer transition-colors hover:bg-accent"
-          onClick={() => navigate("/submit-project")}
-        >
-          <CardContent className="flex items-center justify-between gap-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <FilePlus className="size-5" />
+        {/* Supervisor: submit a project (only visible to supervisors) */}
+        {user.role === "supervisor" && (
+          <Card
+            className="mt-6 cursor-pointer transition-colors hover:bg-accent"
+            onClick={() => navigate("/submit-project")}
+          >
+            <CardContent className="flex items-center justify-between gap-4 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FilePlus className="size-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">Submit a Project</p>
+                  <p className="text-sm text-muted-foreground">For supervisors</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold">Submit a Project</p>
-                <p className="text-sm text-muted-foreground">For supervisors</p>
-              </div>
-            </div>
-            <ArrowRight className="size-5 text-muted-foreground" />
-          </CardContent>
-        </Card>
+              <ArrowRight className="size-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Profile form */}
+        {/* Profile form (students only — supervisors see all projects directly) */}
+        {!isSupervisor && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>
@@ -140,15 +162,16 @@ export default function StudentDashboard() {
             </form>
           </CardContent>
         </Card>
+        )}
 
-        {/* Matching results */}
+        {/* Results: all projects for supervisors, matching projects for students */}
         {results && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold">
-              Matching Projects ({results.length})
+              {isSupervisor ? "Available Projects" : "Matching Projects"} ({results.length})
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sorted by best match first.
+              {isSupervisor ? "All projects on the platform." : "Sorted by best match first."}
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {results.map((project) => (
