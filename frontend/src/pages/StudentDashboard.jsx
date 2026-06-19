@@ -23,6 +23,7 @@ export default function StudentDashboard() {
   const [selectedProject, setSelectedProject] = useState(null)
 
   const isSupervisor = user?.role === "supervisor"
+  const isStudent = user?.role === "student"
 
   // If nobody is logged in, send them to the login page.
   useEffect(() => {
@@ -90,32 +91,13 @@ export default function StudentDashboard() {
         <p className="mt-1 text-muted-foreground">
           {isSupervisor
             ? "Here are all the available projects."
-            : "Tell us about yourself and we'll find projects that match."}
+            : isStudent
+            ? "Tell us about yourself and we'll find projects that match."
+            : ""}
         </p>
 
-        {/* Supervisor: submit a project (only visible to supervisors) */}
-        {user.role === "supervisor" && (
-          <Card
-            className="mt-6 cursor-pointer transition-colors hover:bg-accent"
-            onClick={() => navigate("/submit-project")}
-          >
-            <CardContent className="flex items-center justify-between gap-4 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <FilePlus className="size-5" />
-                </div>
-                <div>
-                  <p className="font-semibold">Submit a Project</p>
-                  <p className="text-sm text-muted-foreground">For supervisors</p>
-                </div>
-              </div>
-              <ArrowRight className="size-5 text-muted-foreground" />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Profile form (students only — supervisors see all projects directly) */}
-        {!isSupervisor && (
+        {/* Profile form (students only — supervisors see all projects, admins see a blank page) */}
+        {isStudent && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Your Profile</CardTitle>
@@ -183,6 +165,27 @@ export default function StudentDashboard() {
               ))}
             </div>
           </section>
+        )}
+
+        {/* Supervisor: submit a project (shown below the available projects) */}
+        {isSupervisor && (
+          <Card
+            className="mt-6 cursor-pointer transition-colors hover:bg-accent"
+            onClick={() => navigate("/submit-project")}
+          >
+            <CardContent className="flex items-center justify-between gap-4 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FilePlus className="size-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">Submit a Project</p>
+                  <p className="text-sm text-muted-foreground">For supervisors</p>
+                </div>
+              </div>
+              <ArrowRight className="size-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
         )}
       </main>
 
