@@ -40,12 +40,6 @@ export default function Landing() {
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button size="lg" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button size="lg" variant="secondary" asChild>
-            <Link to="/register">Register</Link>
-          </Button>
           <Button size="lg" variant="outline" asChild>
             <Link to="/explore">Explore Projects</Link>
           </Button>
