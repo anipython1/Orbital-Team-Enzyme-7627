@@ -126,9 +126,7 @@ by email
            │                             |    domain_keywords     TEXT      |
            └──── 1 ───────────< many ────|    difficulty          TEXT      |
        one supervisor   has many projects +----------------------------------+
-
-
-
+```
 
 Timeline
 
@@ -177,6 +175,7 @@ Database
 
 # 1. Backend (FastAPI)
 
+```
 cd backend
 python -m venv venv
 venv\Scripts\activate
