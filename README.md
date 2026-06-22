@@ -103,6 +103,31 @@ This helps students understand competition levels. And also the admi can see the
 │  "session" = stored  │                                │     findmyfyp.db     │
 │      user object     │                                │  (single SQLite file)│
 └──────────────────────┘                                └──────────────────────┘
+```
+
+## Entity Relationship Diagram
+
+The SQLite database  has two tables with 1 relationship. - users and projects A supervisor is simply a
+`users` row with role = 'supervisor'. Projects link to their supervisor
+by email 
+
+```
+        users                                       projects
++-----------------------+                +----------------------------------+
+| PK id        INTEGER  |                | PK id                  INTEGER   |
+|    name      TEXT      |                |    title               TEXT      |
+|    email     TEXT (UK) |                |    supervisor_name     TEXT      |
+|    password  TEXT      |                | FK contact_email       TEXT      |
+|    role      TEXT      |                |    description         TEXT      |
++-----------------------+                |    required_skills     TEXT      |
+           │                             |    languages           TEXT      |
+           │  email = contact_email      |    prerequisite_knowledge TEXT   |
+           │  (soft link, not enforced)  |    expected_deliverables  TEXT   |
+           │                             |    domain_keywords     TEXT      |
+           └──── 1 ───────────< many ────|    difficulty          TEXT      |
+       one supervisor   has many projects +----------------------------------+
+
+
 
 
 Timeline
