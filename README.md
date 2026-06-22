@@ -170,6 +170,10 @@ Database
 
 - SQLite
 
+## User Flow
+
+![FindMyFYP user flow for students, supervisors, and administrators](docs/user-flow.png)
+
 
 # 1. Backend (FastAPI)
 
