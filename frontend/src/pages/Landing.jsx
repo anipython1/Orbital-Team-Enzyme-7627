@@ -30,7 +30,7 @@ export default function Landing() {
           FindMyFYP
         </h1>
         <p className="mt-4 text-xl font-medium text-muted-foreground sm:text-2xl">
-          Find the right project. Build the right skills.
+          Find the right project. Connect with your perfect mentor.
         </p>
         <p className="mx-auto mt-6 max-w-2xl text-muted-foreground">
           FindMyFYP helps students discover Final Year Projects that fit
