@@ -6,6 +6,7 @@ Docs at:   http://localhost:8000/docs
 """
 
 import hashlib
+import os
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
@@ -18,9 +19,27 @@ from matching import calculate_match, text_to_keywords
 app = FastAPI(title="FindMyFYP")
 
 
+def _allowed_origins() -> list[str]:
+    """Origins allowed to call the API.
+
+    Always permits the local Vite dev server. In production set FRONTEND_URL to
+    the deployed site (comma-separated for more than one). A bare hostname is
+    upgraded to https:// so a Render `fromService` host value works as-is.
+    """
+    origins = ["http://localhost:5173"]
+    for raw in os.environ.get("FRONTEND_URL", "").split(","):
+        url = raw.strip()
+        if not url:
+            continue
+        if not url.startswith("http"):
+            url = "https://" + url
+        origins.append(url.rstrip("/"))
+    return origins
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_allowed_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )

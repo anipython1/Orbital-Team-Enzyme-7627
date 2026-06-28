@@ -3,15 +3,22 @@ Database setup for FindMyFYP.
 Uses SQLite (a single file: findmyfyp.db)- no server needed
 """
 
+import os
 import sqlite3
 
-DB_NAME = "findmyfyp.db"
+# In production point DB_PATH 
+# so registered users and submitted projects survive redeploys
+DB_NAME = os.environ.get("DB_PATH", "findmyfyp.db")
 
 
 def get_connection():
     """Open a connection to the SQLite database"""
+    
+    db_dir = os.path.dirname(DB_NAME)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row  
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -41,7 +48,7 @@ def init_db():
         if "domain_keywords" not in columns:
             cursor.execute("DROP TABLE projects")
         elif "contact_email" not in columns:
-            # Add the new column to an existing table without losing data.
+            # Add the new column 
             cursor.execute(
                 "ALTER TABLE projects ADD COLUMN contact_email TEXT NOT NULL DEFAULT ''"
             )
