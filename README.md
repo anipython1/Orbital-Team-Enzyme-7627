@@ -103,7 +103,30 @@ This helps students understand competition levels. And also the admi can see the
 │  "session" = stored  │                                │     findmyfyp.db     │
 │      user object     │                                │  (single SQLite file)│
 └──────────────────────┘                                └──────────────────────┘
+```
 
+## Entity Relationship Diagram
+
+The SQLite database  has two tables with 1 relationship. - users and projects A supervisor is simply a
+`users` row with role = 'supervisor'. Projects link to their supervisor
+by email 
+
+```
+        users                                       projects
++-----------------------+                +----------------------------------+
+| PK id        INTEGER  |                | PK id                  INTEGER   |
+|    name      TEXT      |                |    title               TEXT      |
+|    email     TEXT (UK) |                |    supervisor_name     TEXT      |
+|    password  TEXT      |                | FK contact_email       TEXT      |
+|    role      TEXT      |                |    description         TEXT      |
++-----------------------+                |    required_skills     TEXT      |
+           │                             |    languages           TEXT      |
+           │  email = contact_email      |    prerequisite_knowledge TEXT   |
+           │  (soft link, not enforced)  |    expected_deliverables  TEXT   |
+           │                             |    domain_keywords     TEXT      |
+           └──── 1 ───────────< many ────|    difficulty          TEXT      |
+       one supervisor   has many projects +----------------------------------+
+```
 
 Timeline
 
@@ -123,8 +146,7 @@ skills and interests. Filtering features will be fully available and skill extra
 ➔ Feature 3  will be completed.
 
 Milestone 3 – Extended System
-In this phase, advanced features will be added to improve usability. The system will include
-skills analysis, Coursera course recommendations, heatmap to show project popularity.
+In this phase, advanced features will be added to improve usability.  heatmap to show project popularity. and bug fixes
 ➔ Feature 4 and 5 will be completed
 
 
@@ -145,9 +167,48 @@ Database
 
 - SQLite
 
+## User Flow
+
+![FindMyFYP user flow for students, supervisors, and administrators](docs/user-flow.png)
+
+
+## Some tech stack details
+
+Architecture
+
+"It's a React + Vite single-page frontend talking over JSON to a FastAPI Python backend, with SQLite as the database.
+
+
+Login / password security
+
+For login, passwords are never stored as plain text. When a user registers, the password is run through hashing using Python's built-in hashlib library in our FastAPI backend, and only the resulting hash is saved in the database
+
+
+SQL injection protection
+
+All database queries use parameterized queries (the ? placeholders) rather than string concatenation, which protects against SQL injection
+
+Role-based access
+
+On the login screen the user first picks a role student, supervisor, or admin. The role is validated against an allowed list both on the frontend and backend and the database itself enforces it with a CHECK constraint. Admins are routed to the Statistics dashboard; everyone else goes to their respective dashboard
+
+Session handling
+
+We keep a lightweight session by storing the logged-in user object in the browser's localStorag so the app remembers who's logged in across pages
+
+Project matching ( core Feature)
+
+When a student enters the skills they have, skills they want to learn, and interests, our backend scores every project. It's a keyword-matching algorithm: 70% of the score comes from how many of the project's required skills match the student's keywords, and 30% from keywords appearing in the project description. Projects are then ranked best-match-first (matching.py)
+
+Statistics / demand heatmap (admin)
+
+The admin Statistics page aggregates live data of total users, total projects, a breakdown of users by role, and the most in-demand domain keywords across all projects we can see which topics are most popular.
+
+
 
 # 1. Backend (FastAPI)
 
+```
 cd backend
 python -m venv venv
 venv\Scripts\activate
@@ -162,3 +223,32 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## USER FLOW CHART 
+
+FindMyFYP follows a role-driven user flow where every user starts at a single entry point and is then guided down one of three distinct paths depending on their role. The journey begins at Start, after which the user proceeds to Login. From the login screen the flow branches into three role-based journeys - Students, Supervisors, and Administrators and although each role follows its own sequence of actions and decisions, all paths eventually converge on a single End point.
+This reflects the platform's role-based access model, where one shared login leads to three different experiences: students discover and connect with projects, supervisors submit projects and respond to interest and administrators analyse data and share insights.
+
+
+
+
+Students
+- Begin by filling in their profile ("Tell Us About Yourself") with their skills and interests.
+- Explore the available projects through matching and filtering.
+- Reach a decision point "Found a suitable project?":
+  - Yes- Contact the supervisor.
+  - No- Wait for other projects, or contact a supervisor for more questions.
+
+
+Supervisors
+- Submit a project to the platform.
+- Reach a decision point- "Any students contacted?":
+  - Yes -Continue discussing with the student.
+  - No -Wait for student interest.
+Administrators
+- View the statistics dashboard (demand heatmap and aggregated data).
+- Reach a decision point - "Any interesting data found?":
+  - Yes- identify a popular project with multiple impressions, then contact the supervisor to share insights.
+  - No-Note it as a not-very-popular project, with no further action needed.
+Convergence
+- All three paths whether a student contacts or waits, a supervisor discusses or waits, or an admin shares insights or not funnels down to a single End point.

@@ -6,6 +6,7 @@ Docs at:   http://localhost:8000/docs
 """
 
 import hashlib
+import os
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
@@ -18,15 +19,40 @@ from matching import calculate_match, text_to_keywords
 app = FastAPI(title="FindMyFYP")
 
 
+def _allowed_origins() -> list[str]:
+    """Origins allowed to call the API.
+
+    Always permits the local Vite dev server. In production set FRONTEND_URL to
+    the deployed site (comma-separated for more than one). A bare hostname is
+    upgraded to https:// so a Render `fromService` host value works as-is.
+    """
+    origins = [
+        "http://localhost:5173",
+        "https://findmyfyp-frontend.onrender.com",
+    ]
+    for raw in os.environ.get("FRONTEND_URL", "").split(","):
+        url = raw.strip()
+        if not url:
+            continue
+        if not url.startswith("http"):
+            url = "https://" + url
+        origins.append(url.rstrip("/"))
+    return origins
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_allowed_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
 init_db()
+
+
+# Roles a user is allowed to register with 
+VALID_ROLES = {"student", "supervisor", "admin"}
 
 
 def hash_password(password: str) -> str:
@@ -70,13 +96,35 @@ class ProjectRequest(BaseModel):
 
 
 
+@app.get("/")
+def health_check():
+    """Simple health check so hosting platforms can confirm the API is alive."""
+    return {"status": "ok", "service": "FindMyFYP API"}
+
+
 @app.post("/api/register")
 def register(request: RegisterRequest):
+    # Validate before touching the database 
+    # instead of a generic "email already registered" 
+    if request.role not in VALID_ROLES:
+        raise HTTPException(
+            status_code=400,
+            detail="Role must be one of: student, supervisor, admin.",
+        )
+    if len(request.password) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 6 characters.",
+        )
+
+    # Store emails lowercase so login isn't case sensi
+    email = request.email.strip().lower()
+
     conn = get_connection()
     try:
         cursor = conn.execute(
             "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-            (request.name, request.email, hash_password(request.password), request.role),
+            (request.name.strip(), email, hash_password(request.password), request.role),
         )
         conn.commit()
         user_id = cursor.lastrowid
@@ -85,7 +133,7 @@ def register(request: RegisterRequest):
     finally:
         conn.close()
 
-    return {"id": user_id, "name": request.name, "email": request.email, "role": request.role}
+    return {"id": user_id, "name": request.name.strip(), "email": email, "role": request.role}
 
 
 @app.post("/api/login")
@@ -93,7 +141,7 @@ def login(request: LoginRequest):
     conn = get_connection()
     user = conn.execute(
         "SELECT * FROM users WHERE email = ? AND password = ?",
-        (request.email, hash_password(request.password)),
+        (request.email.strip().lower(), hash_password(request.password)),
     ).fetchone()
     conn.close()
 

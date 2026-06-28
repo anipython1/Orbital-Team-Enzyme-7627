@@ -25,9 +25,11 @@ export default function StudentDashboard() {
   const isSupervisor = user?.role === "supervisor"
   const isStudent = user?.role === "student"
 
-  // If nobody is logged in, send them to the login page.
+  
+  // Admins don't belong on the student dashboard ,send them to Statistics
   useEffect(() => {
     if (!user) navigate("/login")
+    else if (user.role === "admin") navigate("/statistics")
   }, [user, navigate])
 
   // Supervisors don't fill in a profile

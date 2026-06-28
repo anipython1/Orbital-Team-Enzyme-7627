@@ -35,7 +35,9 @@ export default function Login() {
     try {
       const user = await api.login({ email, password })
       saveUser(user)
-      navigate("/dashboard")
+      // Admins manage the platform, so they go straight to Statistics
+     
+      navigate(user.role === "admin" ? "/statistics" : "/dashboard")
     } catch (err) {
       setError(err.message)
     } finally {
@@ -43,7 +45,7 @@ export default function Login() {
     }
   }
 
-  // Step 1: choose a role before showing the login form.
+  // Step 1: choose a role before showing the login
   if (!role) {
     const roles = [
       { value: "student", label: "Student", icon: User },

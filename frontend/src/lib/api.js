@@ -1,6 +1,8 @@
 // Small helper for talking to the FastAPI backend.
 
-const API_URL = "http://localhost:8000/api"
+// In production set VITE_API_URL (e.g. https://your-backend.onrender.com/api).
+// Falls back to the local FastAPI   dev server when  the env var is absent
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
 
 // Generic request helper: throws an Error with the backend's message on failure.
 async function request(path, options = {}) {
