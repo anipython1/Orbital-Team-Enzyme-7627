@@ -26,7 +26,10 @@ def _allowed_origins() -> list[str]:
     the deployed site (comma-separated for more than one). A bare hostname is
     upgraded to https:// so a Render `fromService` host value works as-is.
     """
-    origins = ["http://localhost:5173"]
+    origins = [
+        "http://localhost:5173",
+        "https://findmyfyp-frontend.onrender.com",
+    ]
     for raw in os.environ.get("FRONTEND_URL", "").split(","):
         url = raw.strip()
         if not url:
