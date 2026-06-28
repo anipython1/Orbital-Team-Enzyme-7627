@@ -25,8 +25,7 @@ export default function StudentDashboard() {
   const isSupervisor = user?.role === "supervisor"
   const isStudent = user?.role === "student"
 
-  
-  // Admins don't belong on the student dashboard ,send them to Statistics
+  // Admins don't belong on the student dashboard — send them to Statistics.
   useEffect(() => {
     if (!user) navigate("/login")
     else if (user.role === "admin") navigate("/statistics")
@@ -62,7 +61,7 @@ export default function StudentDashboard() {
       const matches = await api.matchProjects({
         skills_have: skillsHave,
         skills_want: skillsWant,
-        interests: interests,
+        interests,
       })
       setResults(matches)
     } catch (err) {

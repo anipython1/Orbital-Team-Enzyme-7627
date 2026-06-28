@@ -206,26 +206,9 @@ The admin Statistics page aggregates live data of total users, total projects, a
 
 
 
-# 1. Backend (FastAPI)
 
-```
-cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
-```
 
-# 2. Frontend (React)
-
-```
-cd frontend
-npm install
-npm run dev
-```
-
-## USER FLOW CHART 
-
+## USER FLOW CHART
 FindMyFYP follows a role-driven user flow where every user starts at a single entry point and is then guided down one of three distinct paths depending on their role. The journey begins at Start, after which the user proceeds to Login. From the login screen the flow branches into three role-based journeys - Students, Supervisors, and Administrators and although each role follows its own sequence of actions and decisions, all paths eventually converge on a single End point.
 This reflects the platform's role-based access model, where one shared login leads to three different experiences: students discover and connect with projects, supervisors submit projects and respond to interest and administrators analyse data and share insights.
 
@@ -252,3 +235,26 @@ Administrators
   - No-Note it as a not-very-popular project, with no further action needed.
 Convergence
 - All three paths whether a student contacts or waits, a supervisor discusses or waits, or an admin shares insights or not funnels down to a single End point.
+
+
+
+### FOR PERSONAL USE
+
+
+# 1. Backend (FastAPI)
+
+```
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python -m uvicorn main:app --reload
+```
+
+# 2. Frontend (React)
+
+```
+cd frontend
+npm install
+npm run dev
+```

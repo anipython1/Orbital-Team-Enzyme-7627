@@ -7,8 +7,7 @@ import ProjectDetailModal from "@/components/ProjectDetailModal"
 import { api } from "@/lib/api"
 
 /**
- 
- * Shows all available projects (no login needed)
+ * Shows all available projects (no login needed).
  */
 export default function ExploreProjects() {
   const [projects, setProjects] = useState([])
@@ -16,7 +15,10 @@ export default function ExploreProjects() {
   const [selectedProject, setSelectedProject] = useState(null)
 
   useEffect(() => {
-    api.getProjects().then(setProjects).catch((err) => setError(err.message))
+    api
+      .getProjects()
+      .then(setProjects)
+      .catch((err) => setError(err.message))
   }, [])
 
   return (
