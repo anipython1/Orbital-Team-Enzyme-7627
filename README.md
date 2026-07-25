@@ -1,4 +1,4 @@
-# FindMyFYP
+﻿# FindMyFYP
 
 FindMyFYP is a web platform that helps university students discover suitable
 Final Year Projects (FYPs) based on the skills they already have, the
@@ -235,6 +235,186 @@ Administrators
   - No-Note it as a not-very-popular project, with no further action needed.
 Convergence
 - All three paths whether a student contacts or waits, a supervisor discusses or waits, or an admin shares insights or not funnels down to a single End point.
+
+
+
+## Developer Testing
+
+Developer testing was carried out by the development team where the developers act as the end user and
+exercise the fully integrated application (React frontend + FastAPI backend +
+SQLite database) end-to-end through the real interface, rather than testing
+functions in isolation
+
+
+### Test environment
+
+- Backend running locally- `uvicorn main:app --reload` on `http://localhost:8000`
+- Frontend running locally- `npm run dev` on `http://localhost:5173`
+- Database- `findmyfyp.db` seeded with the 8 sample projects from `init_db()`
+- Browser- Chrome (primary), with Firefox and Edge used for cross-browser checks
+- Each test case was run from a clean state (cleared `localStorage`, fresh DB where noted)
+
+### Result summary
+
+- 19 test cases were executed against the integrated system
+- Status = 1 means Pass, status =0 means Fail
+- 17 passed and 2 failed 
+---
+
+### 1. Navigation & public access (ST= system test)
+
+- **ST-01 Landing page and navigation links**
+  - *Steps:* Open `http://localhost:5173/`, then use the Login, Register and Back to Home links
+  - *Expected:*  section and the three feature cards render with no console errors; each link routes to the correct page
+  - *Status:* **1**
+
+- **ST-02 Browse projects without an account**
+  - *Steps:* Click **Explore Projects** from the landing page
+  - *Expected:* `/explore` lists all 8 seeded projects; no login is required
+  - *Status:* **1**
+
+### 2. Registration (`/register`)
+
+- **ST-03 Register successfully in all three roles**
+  - *Steps:* Register a student, a supervisor and an admin with valid details
+  - *Expected:* Each account is created and logged in immediately- students get the profile form, supervisors get the project list plus the **Submit a Project** card, admins are forwarded to `/statistics`
+  - *Status:* **1**
+
+- **ST-04 Form validation rejects invalid input**
+  - *Steps:* Attempt to register with (a) a 1-character name, (b) `notanemail`, (c) password `123`, (d) no role selected
+  - *Expected:* Each attempt is blocked with the matching message- "Please enter your full name.", "Please enter a valid email address.", "Password must be at least 6 characters.", "Please select a role."; no API call is made
+  - *Status:* **1**
+
+- **ST-05 Duplicate email rejected**
+  - *Steps:* Register twice with the same email
+  - *Expected:* Second attempt returns  "This email is already registered."
+  - *Status:* **1**
+
+- **ST-06 Data is stored safely**
+  - *Steps:* Register with  TestUser@gmail.com , then inspect the `users` table
+  - *Expected:* Email stored trimmed and lowercased; password stored as a 64-character SHA-256 hash, never in plain text
+  - *Status:* **1**
+
+### 3. Login & role-based routing (`/login`)
+
+- **ST-07 Login and role-based redirection**
+  - *Steps:* Choose a role on the "Login as" screen, log in with valid credentials, and repeat using an uppercase email
+  - *Expected:* Login succeeds regardless of email casing, the button shows "Logging in..." while disabled, and the user is routed by the role stored in the database- admins to `/statistics`, everyone else to `/dashboard`. The role button chosen on screen is presentational and grants no privileges
+  - *Status:* **1**
+
+- **ST-08 Invalid credentials rejected**
+  - *Steps:* Log in with (a) a valid email and wrong password, (b) an unregistered email
+  - *Expected:* Both return HTTP 401 with the same generic "Incorrect email or password." message, so the response does not reveal which field was wrong
+  - *Status:* **1**
+
+### 4. Student profiling & project matching (`/dashboard`)
+
+- **ST-09 Matching returns correctly ranked results**
+  - *Steps:* As a student, search with Skills I have = `Python, Machine Learning`, then again with `React, JavaScript` + interest `web development`
+  - *Expected:* Results are headed "Matching Projects (8)" and sorted best-match-first- ML projects lead the first search, web projects the second, every score is an integer between 0 and 100 and decreases down the grid
+  - *Status:* **1**
+
+- **ST-10 Input handling and validation**
+  - *Steps:* Search with (a) all three fields blank, (b) `  PYTHON ,  , sql  `, (c) an unrelated skill such as `basket weaving`
+  - *Expected:* "Please enter at least one skill or interest."; (b) parsed to `python` and `sql`, blank entry ignored, scores identical to the clean input; (c) all 8 projects still returned but scored 0
+  - *Status:* **1**
+
+
+- **ST-11 Project detail modal**
+  - *Steps:* Click a project card, review it, then close the modal
+  - *Expected:* Modal shows description, required skills, languages, prerequisite knowledge, expected deliverables, domain keywords, difficulty and a clickable contact email; closing it leaves the results list unchanged
+  - *Status:* **1**
+
+- **ST-12 Supervisor view of the dashboard**
+  - *Steps:* Log in as a supervisor
+  - *Expected:* No profile form is shown; "Available Projects" loads automatically on page load
+  - *Status:* **1**
+
+### 5. Project submission (`/submit-project`)
+
+- **ST-13 Submit a valid project**
+  - *Steps:* From the supervisor dashboard open **Submit a Project**, fill in the form and submit- once with all fields completed, once with the optional fields left blank
+  - *Expected:* Both are inserted into the `projects` table and redirect to `/explore` where the new project is visible
+  - *Status:* **1**
+
+- **ST-15 Submission form validation**
+  - *Steps:* Attempt to submit with a 2-character title,  a 1-character supervisor name, contact email `abc@abc`, no difficulty, a 5-character description,no required skills
+  - *Expected:* Each attempt is blocked with its matching message, e.g. "Please enter a valid contact email." and "Please select a difficulty level."
+  - *Status:* **1**
+
+- **ST-16 New projects flow through the system**
+  - *Steps:* Submit a project requiring `Rust` with a new domain keyword, then search as a student and reload `/statistics`
+  - *Expected:* The project tops the matching results for `Rust`, Total Projects increases by 1, and the new keyword appears in the Domain Keywords list
+  - *Status:* **1**
+
+### 6. Admin statistics / demand heatmap (`/statistics`)
+
+- **ST-17 Statistics are accurate**
+  - *Steps:* Log in as admin and compare the page against `SELECT COUNT` on the `projects` and `users` tables
+  - *Expected:* Total Projects, Total Users and Unique Keywords, match the database the role breakdown sums to Total Users, domain keywords are listed with counts in descending order, most indemand topic first
+  - *Status:* **1**
+
+### 7. Session handling & access control
+
+- **ST-19 Session lifecycle**
+  - *Steps:* Log in, refresh the page, log out, then press Back; separately, clear `localStorage` and open `/dashboard` directly; finally, open `/dashboard` as an admin
+  - *Expected:* Session survives a refresh via `localStorage` logout removes the `user` key and returns to the landing page Back after logout and direct access while logged out both redirect to `/login` and admins are forwarded to `/statistics`
+  - *Status:* **1**
+
+- **ST-20 Direct access to `/submit-project` while logged out**
+  - *Steps:* Clear `localStorage`, then navigate directly to `/submit-project`
+  - *Expected:* Redirected to `/login`
+  - *Actual:* The form loads and is fully usable while logged out- a project can be created by any anonymous visitor, because `SubmitProject.jsx` has no session check (only `StudentDashboard.jsx` guards its route)
+  - *Status:* **0**
+
+- **ST-21 Direct access to `/statistics` as a student**
+  - *Steps:* Logged in as a student, navigate directly to `/statistics`
+  - *Expected:* Admin-only data is withheld and the student is redirected
+  - *Actual:* The full statistics dashboard renders for a student, and also for a logged-out visitor `Statistics.jsx` performs no role check and `GET /api/stats` is an unauthenticated endpoint
+  - *Status:* **0**
+
+
+---
+
+### Known limitations of developer testing
+
+- Developers already know the intended path through the system, so these tests are biased toward the "happy path"
+- Usability problems (confusing labels, unclear next steps) are hard for the developers to judge, because they designed the interface
+- Some issues only appear under realistic scale and concurrency, which manual local testing cannot reproduce
+
+
+
+---
+
+## Overall Limitations & Future Work
+
+The current build is a working prototype that delivers the  core features
+end-to-end. The limitations below are the known gaps in the delivered system,
+each paired with the work planned to address it.
+
+### 1. Matching algorithm
+
+- Matching is keyword-based rather than NLP- `calculate_match()` splits the input on commas and compares substrings, so it has no understanding of meaning: "ML" does not match "Machine Learning", and "JS" does not match "JavaScript"
+- Substring comparison also over-matches, because a short input can be contained in an unrelated skill
+- The 70/30 split between skill match and description match is a fixed assumption that has never been validated against real student outcomes
+- The interest score saturates after 3 matching keywords, so a very strong interest scores the same as a moderate one
+- **Future work:** move to whole-keyword matching with a synonym and abbreviation dictionary, then to semantic matching  and tune the weights from real feedback
+
+### 2. Features from the project that can be implemented in future
+
+- **Skill gap analysis** - projects list their required skills, but the system never computes the difference against the student's profile
+- **Coursera/datacamp course recommendation** - recommend courses based on those lacking that is relevant to project
+- **Real-time demand heatmap** - the statistics page counts domain keywords across projects, but students cannot register interest in a specific project, so actual demand is not measured and maybe include colours heatmap
+- **Teammate discovery, plain-language explanations, and automatic keyword tagging** -  some FYP project in some universities allowed partnering up so we can implement a find a  suitable partner feature in future
+
+
+### 3. Data model, project management & scale
+
+- The supervisor-to-project link is a soft link on an email string rather than a foreign key, so a project can be submitted under any email and the link breaks if a supervisor changes address
+- Projects can only be created- there are no update or delete endpoints, so a supervisor cannot correct or withdraw a project and an admin cannot moderate submissions
+- Skills are stored as a single comma-separated text field, which makes accurate querying and filtering impossible
+- SQLite is a single file with limited concurrent-write support, adequate for a prototype only
+- **Future work:** add a real foreign key and project ownership, add PUT/DELETE endpoints with a "My Projects" view, normalise skills into their own table, filter and paginate at the database level, and migrate to PostgreSQL for deployment
 
 
 
