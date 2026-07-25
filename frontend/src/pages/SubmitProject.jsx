@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, GraduationCap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { api } from "@/lib/api"
+import { getUser } from "@/lib/auth"
 
 const EMPTY_FORM = {
   title: "",
@@ -35,14 +36,62 @@ const EMPTY_FORM = {
 }
 
 /**
- * Page where supervisors submit a new project.
- * Reached from the "Submit Project" button on the landing page.
+ * Page where supervisors submit a new project, and where they edit one they
+ * already submitted. The same form serves both:
+ *   /submit-project      -> create
+ *   /edit-project/:id    -> edit an existing project
  */
 export default function SubmitProject() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const isEditing = Boolean(id)
+  // getUser() builds a new object each render, so depend on the email string
+  // rather than the object — otherwise the effect below would re-run forever.
+  const userEmail = getUser()?.email || ""
+
   const [form, setForm] = useState(EMPTY_FORM)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  // While editing we wait for the existing project before showing the form.
+  const [loadingProject, setLoadingProject] = useState(isEditing)
+
+  // Load the project being edited and pre-fill the form with it.
+  useEffect(() => {
+    if (!isEditing) return
+    let active = true
+
+    api
+      .getProject(id)
+      .then((project) => {
+        if (!active) return
+        // Only the supervisor who submitted the project may edit it. The
+        // backend enforces this too — this check just avoids showing a form
+        // that could never be saved.
+        const owner = (project.contact_email || "").toLowerCase()
+        if (!userEmail || owner !== userEmail.toLowerCase()) {
+          setError("You can only edit your own projects.")
+          return
+        }
+        setForm({
+          title: project.title,
+          supervisor_name: project.supervisor_name,
+          contact_email: project.contact_email,
+          difficulty: project.difficulty,
+          description: project.description,
+          required_skills: project.required_skills,
+          languages: project.languages,
+          prerequisite_knowledge: project.prerequisite_knowledge,
+          expected_deliverables: project.expected_deliverables,
+          domain_keywords: project.domain_keywords,
+        })
+      })
+      .catch((err) => active && setError(err.message))
+      .finally(() => active && setLoadingProject(false))
+
+    return () => {
+      active = false
+    }
+  }, [id, isEditing, userEmail])
 
   // Update one field of the form.
   function update(field, value) {
@@ -82,13 +131,39 @@ export default function SubmitProject() {
     // Call  backend
     setLoading(true)
     try {
-      await api.createProject(form)
-      navigate("/explore")
+      if (isEditing) {
+        await api.updateProject(id, form, userEmail)
+        navigate("/dashboard")
+      } else {
+        await api.createProject(form)
+        navigate("/explore")
+      }
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Editing a project we could not load (missing, or not ours).
+  if (isEditing && !loadingProject && !form.title) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center">
+            <CardTitle>Cannot edit this project</CardTitle>
+            <CardDescription>{error || "Project not found."}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button variant="outline" asChild>
+              <Link to="/dashboard">
+                <ArrowLeft /> Back to Dashboard
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -100,8 +175,8 @@ export default function SubmitProject() {
             FindMyFYP
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
-              <ArrowLeft /> Back to Home
+            <Link to={isEditing ? "/dashboard" : "/"}>
+              <ArrowLeft /> {isEditing ? "Back to Dashboard" : "Back to Home"}
             </Link>
           </Button>
         </div>
@@ -110,10 +185,13 @@ export default function SubmitProject() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Submit a Project</CardTitle>
+            <CardTitle className="text-2xl">
+              {isEditing ? "Edit Project" : "Submit a Project"}
+            </CardTitle>
             <CardDescription>
-              Supervisors: fill in the details below to add your project to the
-              explorer.
+              {isEditing
+                ? "Update the details below. Students will see your changes straight away."
+                : "Supervisors: fill in the details below to add your project to the explorer."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -243,9 +321,22 @@ export default function SubmitProject() {
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 
-              <Button type="submit" disabled={loading}>
-                {loading ? "Submitting..." : "Submit Project"}
-              </Button>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={loading}>
+                  {loading
+                    ? isEditing
+                      ? "Saving..."
+                      : "Submitting..."
+                    : isEditing
+                    ? "Save Changes"
+                    : "Submit Project"}
+                </Button>
+                {isEditing && (
+                  <Button variant="outline" type="button" asChild>
+                    <Link to="/dashboard">Cancel</Link>
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>

@@ -94,6 +94,12 @@ class ProjectRequest(BaseModel):
     domain_keywords: str
 
 
+class ProjectUpdateRequest(ProjectRequest):
+    # Email of the supervisor asking for the change, so we can check they own
+    # the project before editing it.
+    requester_email: str
+
+
 
 
 @app.get("/")
@@ -188,6 +194,91 @@ def create_project(request: ProjectRequest):
     project_id = cursor.lastrowid
     conn.close()
     return {"id": project_id, **request.model_dump()}
+
+
+def _owned_project_or_error(conn, project_id: int, requester_email: str):
+    """Fetch a project and confirm the requester is the supervisor who owns it.
+
+    Ownership is the project's contact_email, which is the same soft link used
+    everywhere else in the app.
+    """
+    project = conn.execute(
+        "SELECT * FROM projects WHERE id = ?", (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    owner = (project["contact_email"] or "").strip().lower()
+    if owner != requester_email.strip().lower():
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail="You can only edit or delete your own projects.",
+        )
+
+    return project
+
+
+@app.get("/api/projects/{project_id}")
+def get_project(project_id: int):
+    """Return a single project (used to pre-fill the edit form)."""
+    conn = get_connection()
+    project = conn.execute(
+        "SELECT * FROM projects WHERE id = ?", (project_id,)
+    ).fetchone()
+    conn.close()
+
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    return dict(project)
+
+
+@app.put("/api/projects/{project_id}")
+def update_project(project_id: int, request: ProjectUpdateRequest):
+    """Update a project. Only the supervisor who submitted it may change it."""
+    conn = get_connection()
+    _owned_project_or_error(conn, project_id, request.requester_email)
+
+    conn.execute(
+        """UPDATE projects
+           SET title = ?, supervisor_name = ?, contact_email = ?, description = ?,
+               required_skills = ?, languages = ?, prerequisite_knowledge = ?,
+               expected_deliverables = ?, domain_keywords = ?, difficulty = ?
+           WHERE id = ?""",
+        (
+            request.title,
+            request.supervisor_name,
+            request.contact_email,
+            request.description,
+            request.required_skills,
+            request.languages,
+            request.prerequisite_knowledge,
+            request.expected_deliverables,
+            request.domain_keywords,
+            request.difficulty,
+            project_id,
+        ),
+    )
+    conn.commit()
+    updated = conn.execute(
+        "SELECT * FROM projects WHERE id = ?", (project_id,)
+    ).fetchone()
+    conn.close()
+    return dict(updated)
+
+
+@app.delete("/api/projects/{project_id}")
+def delete_project(project_id: int, requester_email: str):
+    """Delete a project. Only the supervisor who submitted it may remove it."""
+    conn = get_connection()
+    _owned_project_or_error(conn, project_id, requester_email)
+
+    conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+    conn.commit()
+    conn.close()
+    return {"id": project_id, "deleted": True}
 
 
 @app.get("/api/stats")

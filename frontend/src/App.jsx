@@ -16,6 +16,7 @@ export default function App() {
       <Route path="/dashboard" element={<StudentDashboard />} />
       <Route path="/explore" element={<ExploreProjects />} />
       <Route path="/submit-project" element={<SubmitProject />} />
+      <Route path="/edit-project/:id" element={<SubmitProject />} />
       <Route path="/statistics" element={<Statistics />} />
     </Routes>
   )

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ProjectCard from "@/components/ProjectCard"
 import ProjectDetailModal from "@/components/ProjectDetailModal"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { api } from "@/lib/api"
 import { getUser, logout } from "@/lib/auth"
 
@@ -21,6 +22,8 @@ export default function StudentDashboard() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+  const [projectToDelete, setProjectToDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const isSupervisor = user?.role === "supervisor"
   const isStudent = user?.role === "student"
@@ -48,9 +51,30 @@ export default function StudentDashboard() {
 
   if (!user) return null
 
+  // A supervisor owns a project when its contact email is theirs.
+  const email = (user.email || "").toLowerCase()
+  const owns = (project) => (project.contact_email || "").toLowerCase() === email
+  const myProjects = isSupervisor && results ? results.filter(owns) : []
+  const otherProjects = isSupervisor && results ? results.filter((p) => !owns(p)) : []
+
   function handleLogout() {
     logout()
     navigate("/")
+  }
+
+  async function handleDelete() {
+    setError("")
+    setDeleting(true)
+    try {
+      await api.deleteProject(projectToDelete.id, user.email)
+      // Drop it from the list rather than re-fetching everything.
+      setResults((prev) => prev.filter((p) => p.id !== projectToDelete.id))
+      setProjectToDelete(null)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   async function handleFindProjects(event) {
@@ -147,15 +171,64 @@ export default function StudentDashboard() {
         </Card>
         )}
 
-        {/* Results: all projects for supervisors, matching projects for students */}
-        {results && (
+        {/* Supervisors see their own projects (which they can edit or delete)
+            separately from everyone else's. */}
+        {results && isSupervisor && (
+          <>
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold">My Projects ({myProjects.length})</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Projects you submitted. You can edit or delete them.
+              </p>
+
+              {isSupervisor && error && (
+                <p className="mt-3 text-sm text-destructive">{error}</p>
+              )}
+
+              {myProjects.length === 0 ? (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  You have not submitted any projects yet.
+                </p>
+              ) : (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {myProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onClick={() => setSelectedProject(project)}
+                      onEdit={(p) => navigate(`/edit-project/${p.id}`)}
+                      onDelete={(p) => setProjectToDelete(p)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold">
+                Other Projects ({otherProjects.length})
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Projects submitted by other supervisors.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {otherProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onClick={() => setSelectedProject(project)}
+                  />
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Students see their ranked matches. */}
+        {results && !isSupervisor && (
           <section className="mt-8">
-            <h2 className="text-xl font-semibold">
-              {isSupervisor ? "Available Projects" : "Matching Projects"} ({results.length})
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isSupervisor ? "All projects on the platform." : "Sorted by best match first."}
-            </p>
+            <h2 className="text-xl font-semibold">Matching Projects ({results.length})</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Sorted by best match first.</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {results.map((project) => (
                 <ProjectCard
@@ -193,6 +266,16 @@ export default function StudentDashboard() {
       <ProjectDetailModal
         project={selectedProject}
         onClose={() => setSelectedProject(null)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(projectToDelete)}
+        title="Delete this project?"
+        message={`"${projectToDelete?.title}" will be removed permanently and students will no longer see it. This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setProjectToDelete(null)}
       />
     </div>
   )

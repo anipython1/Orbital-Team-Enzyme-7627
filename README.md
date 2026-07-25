@@ -411,7 +411,8 @@ each paired with the work planned to address it.
 ### 3. Data model, project management & scale
 
 - The supervisor-to-project link is a soft link on an email string rather than a foreign key, so a project can be submitted under any email and the link breaks if a supervisor changes address
-- Projects can only be created- there are no update or delete endpoints, so a supervisor cannot correct or withdraw a project and an admin cannot moderate submissions
+- Supervisors can now edit and delete their own projects, but ownership is checked by comparing the caller's email against `contact_email`- because there is no auth token, that email is supplied by the client and could be forged by calling the API directly
+- Admins still cannot moderate or remove submissions made by other people
 - Skills are stored as a single comma-separated text field, which makes accurate querying and filtering impossible
 - SQLite is a single file with limited concurrent-write support, adequate for a prototype only
 - **Future work:** add a real foreign key and project ownership, add PUT/DELETE endpoints with a "My Projects" view, normalise skills into their own table, filter and paginate at the database level, and migrate to PostgreSQL for deployment
