@@ -2,8 +2,11 @@ import { Link } from "react-router-dom"
 import { GraduationCap, Sparkles, Target, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getUser, homePath } from "@/lib/auth"
 
 export default function Landing() {
+  const user = getUser()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top navigation bar */}
@@ -13,14 +16,25 @@ export default function Landing() {
             <GraduationCap className="size-6" />
             FindMyFYP
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/register">Register</Link>
-            </Button>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden text-sm text-muted-foreground sm:inline">
+                Signed in as {user.name}
+              </span>
+              <Button asChild>
+                <Link to={homePath(user)}>Dashboard</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="ghost" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/register">Register</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 

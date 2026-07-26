@@ -136,7 +136,7 @@ export default function SubmitProject() {
         navigate("/dashboard")
       } else {
         await api.createProject(form)
-        navigate("/explore")
+        navigate("/dashboard")
       }
     } catch (err) {
       setError(err.message)

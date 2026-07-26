@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button"
 import ProjectCard from "@/components/ProjectCard"
 import ProjectDetailModal from "@/components/ProjectDetailModal"
 import { api } from "@/lib/api"
+import { getUser, homePath } from "@/lib/auth"
 
 /**
- * Shows all available projects (no login needed).
+ * Shows all available projects (no login needed but stays session aware
+ * so a logged in visitor is not sent back to the signed out landing page).
  */
 export default function ExploreProjects() {
+  const user = getUser()
   const [projects, setProjects] = useState([])
   const [error, setError] = useState("")
   const [selectedProject, setSelectedProject] = useState(null)
@@ -30,8 +33,8 @@ export default function ExploreProjects() {
             FindMyFYP
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
-              <ArrowLeft /> Back to Home
+            <Link to={user ? homePath(user) : "/"}>
+              <ArrowLeft /> {user ? "Back to Dashboard" : "Back to Home"}
             </Link>
           </Button>
         </div>
@@ -40,8 +43,8 @@ export default function ExploreProjects() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-2xl font-bold">Explore Projects</h1>
         <p className="mt-1 text-muted-foreground">
-          Browse all available Final Year Projects. Register as a student to
-          get personalised matches!
+          Browse all available Final Year Projects.
+          {!user && " Register as a student to get personalised matches!"}
         </p>
 
         {error && <p className="mt-4 text-sm text-destructive">{error}</p>}

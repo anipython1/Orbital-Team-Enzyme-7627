@@ -5,8 +5,19 @@ export function saveUser(user) {
 }
 
 export function getUser() {
-  const stored = localStorage.getItem("user")
-  return stored ? JSON.parse(stored) : null
+  try {
+    const stored = localStorage.getItem("user")
+    return stored ? JSON.parse(stored) : null
+  } catch {
+    // Storage blocked (private browsing) or a corrupted value treat as logged out.
+    return null
+  }
+}
+
+
+export function homePath(user) {
+  if (!user) return "/"
+  return user.role === "admin" ? "/statistics" : "/dashboard"
 }
 
 export function logout() {

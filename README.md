@@ -238,12 +238,12 @@ Convergence
 
 
 
-## Developer Testing
+## Developer Testing/ User testing
 
 Developer testing was carried out by the development team where the developers act as the end user and
 exercise the fully integrated application (React frontend + FastAPI backend +
 SQLite database) end-to-end through the real interface, rather than testing
-functions in isolation
+functions in isolation, university students also helped to test the overall website and give their opinions
 
 
 ### Test environment

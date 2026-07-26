@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { GraduationCap, LogOut, Search, FilePlus, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,9 @@ import { getUser, logout } from "@/lib/auth"
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
-  const user = getUser()
+  // Read the session once. getUser() returns a fresh object each call, so calling
+  // it inline would give the redirect effect below a new dependency every render.
+  const user = useMemo(() => getUser(), [])
 
   const [skillsHave, setSkillsHave] = useState("")
   const [skillsWant, setSkillsWant] = useState("")
