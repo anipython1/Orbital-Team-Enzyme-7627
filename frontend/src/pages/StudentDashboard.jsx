@@ -30,13 +30,13 @@ export default function StudentDashboard() {
   const isSupervisor = user?.role === "supervisor"
   const isStudent = user?.role === "student"
 
-  // Admins don't belong on the student dashboard — send them to Statistics.
+  // Admins do not belong on the student dashboard so send them to Statistics
   useEffect(() => {
     if (!user) navigate("/login")
     else if (user.role === "admin") navigate("/statistics")
   }, [user, navigate])
 
-  // Supervisors don't fill in a profile
+  // Supervisors dont fill in a profile
   useEffect(() => {
     if (!isSupervisor) return
     let active = true
@@ -53,10 +53,10 @@ export default function StudentDashboard() {
 
   if (!user) return null
 
-  // A supervisor owns a project when they submitted it. That is owner_email —
+  // A supervisor owns a project when they submitted it. That is owner_email 
   // NOT contact_email, which is just the address students are told to write to
-  // and is often a different one. Rows created before owner_email existed fall
-  // back to contact_email, which is how ownership used to be inferred.
+  // and is often a different one
+  // back to contact_email, which is how ownership used to be inferred
   const email = (user.email || "").trim().toLowerCase()
   const owns = (project) =>
     Boolean(email) &&
@@ -74,7 +74,7 @@ export default function StudentDashboard() {
     setDeleting(true)
     try {
       await api.deleteProject(projectToDelete.id, user.email)
-      // Drop it from the list rather than re-fetching everything.
+      // Drop it from the list rather than refetching everything.
       setResults((prev) => prev.filter((p) => p.id !== projectToDelete.id))
       setProjectToDelete(null)
     } catch (err) {
@@ -128,7 +128,7 @@ export default function StudentDashboard() {
             : ""}
         </p>
 
-        {/* Profile form (students only — supervisors see all projects, admins see a blank page) */}
+        {/* Profile form (students only , supervisors see all projects, admins see a blank page) */}
         {isStudent && (
         <Card className="mt-6">
           <CardHeader>
@@ -179,7 +179,7 @@ export default function StudentDashboard() {
         )}
 
         {/* Supervisors see their own projects (which they can edit or delete)
-            separately from everyone else's. */}
+            separately . */}
         {results && isSupervisor && (
           <>
             <section className="mt-8">

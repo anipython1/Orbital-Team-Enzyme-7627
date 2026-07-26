@@ -14,13 +14,13 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [role, setRole] = useState("") // chosen first: student / supervisor / admin
+  const [role, setRole] = useState("") // chosenfirst: student/ supervisor / admin
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError("")
 
-    // --- Basic validation ---
+    // Basic validation 
     if (!email.includes("@")) {
       setError("Please enter a valid email address.")
       return
@@ -30,7 +30,7 @@ export default function Login() {
       return
     }
 
-    // --- Call the backend ---
+    //  Call the backend 
     setLoading(true)
     try {
       const user = await api.login({ email, password })

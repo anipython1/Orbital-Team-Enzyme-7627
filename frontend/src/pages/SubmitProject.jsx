@@ -46,11 +46,11 @@ export default function SubmitProject() {
   const { id } = useParams()
   const isEditing = Boolean(id)
   // getUser() builds a new object each render, so depend on the email string
-  // rather than the object — otherwise the effect below would re-run forever.
+  // rather than the object , otherwise the effect below would re-run forever.
   const user = getUser()
   const userEmail = user?.email || ""
 
-  // Start a new project pre-filled with the supervisor's own details. They can
+  // Start a new project pre-filled with the supervisor own details. They can
   // still change the contact email; ownership is tracked separately.
   const [form, setForm] = useState(() =>
     isEditing
@@ -72,7 +72,7 @@ export default function SubmitProject() {
       .then((project) => {
         if (!active) return
         // Only the supervisor who submitted the project may edit it. The
-        // backend enforces this too — this check just avoids showing a form
+        // backend enforces this too , this check just avoids showing a form
         // that could never be saved.
         const owner = (project.owner_email || project.contact_email || "")
           .trim()

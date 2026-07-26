@@ -9,7 +9,7 @@ import { getUser, homePath } from "@/lib/auth"
 
 /**
  * Shows all available projects (no login needed but stays session aware
- * so a logged in visitor is not sent back to the signed out landing page).
+ * so a logged in visitor is not sent back to the signed out  page).
  */
 export default function ExploreProjects() {
   const user = getUser()

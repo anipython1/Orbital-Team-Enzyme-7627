@@ -96,7 +96,7 @@ class ProjectRequest(BaseModel):
 
 class ProjectCreateRequest(ProjectRequest):
     # Account email of the supervisor submitting the project. This is what
-    # ownership is based on contact_email is only the address shown to
+    # ownership is based on contact_emaiil is only the address shown to
     # students and a supervisor is free to give a different one
     owner_email: str
 
@@ -264,7 +264,7 @@ def update_project(project_id: int, request: ProjectUpdateRequest):
 
     # owner_email is rewritten from the (already authorised) requester so legacy
     # rows that only had contact_email get a real owner the first time they are
-    # edited — otherwise changing the contact address would orphan the project.
+    # edited  otherwise changing the contact address would orphan the project.
     conn.execute(
         """UPDATE projects
            SET title = ?, supervisor_name = ?, contact_email = ?, owner_email = ?,

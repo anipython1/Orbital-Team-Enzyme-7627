@@ -46,7 +46,7 @@ export default function Register() {
       return
     }
 
-    // --- Call the backend ---
+    // Call  backend 
     setLoading(true)
     try {
       const user = await api.register({ name, email, password, role })
