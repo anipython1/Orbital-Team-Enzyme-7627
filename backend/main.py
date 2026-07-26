@@ -94,6 +94,13 @@ class ProjectRequest(BaseModel):
     domain_keywords: str
 
 
+class ProjectCreateRequest(ProjectRequest):
+    # Account email of the supervisor submitting the project. This is what
+    # ownership is based on contact_email is only the address shown to
+    # students and a supervisor is free to give a different one
+    owner_email: str
+
+
 class ProjectUpdateRequest(ProjectRequest):
     # Email of the supervisor asking for the change, so we can check they own
     # the project before editing it.
@@ -169,18 +176,26 @@ def list_projects():
 
 
 @app.post("/api/projects")
-def create_project(request: ProjectRequest):
+def create_project(request: ProjectCreateRequest):
     """Create a new project (used by the supervisor 'Submit Project' form)."""
+    owner_email = request.owner_email.strip().lower()
+    if not owner_email:
+        raise HTTPException(
+            status_code=400,
+            detail="You must be logged in as a supervisor to submit a project.",
+        )
+
     conn = get_connection()
     cursor = conn.execute(
         """INSERT INTO projects
-           (title, supervisor_name, contact_email, description, required_skills, languages,
-            prerequisite_knowledge, expected_deliverables, domain_keywords, difficulty)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           (title, supervisor_name, contact_email, owner_email, description, required_skills,
+            languages, prerequisite_knowledge, expected_deliverables, domain_keywords, difficulty)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             request.title,
             request.supervisor_name,
-            request.contact_email,
+            request.contact_email.strip(),
+            owner_email,
             request.description,
             request.required_skills,
             request.languages,
@@ -193,14 +208,20 @@ def create_project(request: ProjectRequest):
     conn.commit()
     project_id = cursor.lastrowid
     conn.close()
-    return {"id": project_id, **request.model_dump()}
+    return {
+        **request.model_dump(),
+        "id": project_id,
+        "contact_email": request.contact_email.strip(),
+        "owner_email": owner_email,
+    }
 
 
 def _owned_project_or_error(conn, project_id: int, requester_email: str):
     """Fetch a project and confirm the requester is the supervisor who owns it.
 
-    Ownership is the project's contact_email, which is the same soft link used
-    everywhere else in the app.
+    Ownership is the project's owner_email — the account email captured when the
+    project was submitted. Older rows predate that column, so fall back to
+    contact_email, which is how ownership used to be inferred.
     """
     project = conn.execute(
         "SELECT * FROM projects WHERE id = ?", (project_id,)
@@ -210,8 +231,8 @@ def _owned_project_or_error(conn, project_id: int, requester_email: str):
         conn.close()
         raise HTTPException(status_code=404, detail="Project not found.")
 
-    owner = (project["contact_email"] or "").strip().lower()
-    if owner != requester_email.strip().lower():
+    owner = (project["owner_email"] or project["contact_email"] or "").strip().lower()
+    if not owner or owner != requester_email.strip().lower():
         conn.close()
         raise HTTPException(
             status_code=403,
@@ -241,16 +262,20 @@ def update_project(project_id: int, request: ProjectUpdateRequest):
     conn = get_connection()
     _owned_project_or_error(conn, project_id, request.requester_email)
 
+    # owner_email is rewritten from the (already authorised) requester so legacy
+    # rows that only had contact_email get a real owner the first time they are
+    # edited — otherwise changing the contact address would orphan the project.
     conn.execute(
         """UPDATE projects
-           SET title = ?, supervisor_name = ?, contact_email = ?, description = ?,
-               required_skills = ?, languages = ?, prerequisite_knowledge = ?,
+           SET title = ?, supervisor_name = ?, contact_email = ?, owner_email = ?,
+               description = ?, required_skills = ?, languages = ?, prerequisite_knowledge = ?,
                expected_deliverables = ?, domain_keywords = ?, difficulty = ?
            WHERE id = ?""",
         (
             request.title,
             request.supervisor_name,
-            request.contact_email,
+            request.contact_email.strip(),
+            request.requester_email.strip().lower(),
             request.description,
             request.required_skills,
             request.languages,

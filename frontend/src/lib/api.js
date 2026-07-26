@@ -26,7 +26,11 @@ export const api = {
   login: (credentials) => request("/login", post(credentials)),
   getProjects: () => request("/projects"),
   getProject: (id) => request(`/projects/${id}`),
-  createProject: (project) => request("/projects", post(project)),
+  // owner_email is the supervisor's account email. It is what makes the project
+  // theirs the contact_email on the form is only what students see, and may
+  // be a different address
+  createProject: (project, ownerEmail) =>
+    request("/projects", post({ ...project, owner_email: ownerEmail })),
   // The supervisor's own email is sent along so the backend can check they own
   // the project before changing or removing it.
   updateProject: (id, project, requesterEmail) =>

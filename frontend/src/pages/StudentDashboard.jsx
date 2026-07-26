@@ -53,9 +53,14 @@ export default function StudentDashboard() {
 
   if (!user) return null
 
-  // A supervisor owns a project when its contact email is theirs.
-  const email = (user.email || "").toLowerCase()
-  const owns = (project) => (project.contact_email || "").toLowerCase() === email
+  // A supervisor owns a project when they submitted it. That is owner_email —
+  // NOT contact_email, which is just the address students are told to write to
+  // and is often a different one. Rows created before owner_email existed fall
+  // back to contact_email, which is how ownership used to be inferred.
+  const email = (user.email || "").trim().toLowerCase()
+  const owns = (project) =>
+    Boolean(email) &&
+    (project.owner_email || project.contact_email || "").trim().toLowerCase() === email
   const myProjects = isSupervisor && results ? results.filter(owns) : []
   const otherProjects = isSupervisor && results ? results.filter((p) => !owns(p)) : []
 

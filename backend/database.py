@@ -47,11 +47,20 @@ def init_db():
         columns = [row[1] for row in cursor.execute("PRAGMA table_info(projects)")]
         if "domain_keywords" not in columns:
             cursor.execute("DROP TABLE projects")
-        elif "contact_email" not in columns:
-            # Add the new column 
-            cursor.execute(
-                "ALTER TABLE projects ADD COLUMN contact_email TEXT NOT NULL DEFAULT ''"
-            )
+        else:
+            if "contact_email" not in columns:
+                # Add the new column
+                cursor.execute(
+                    "ALTER TABLE projects ADD COLUMN contact_email TEXT NOT NULL DEFAULT ''"
+                )
+            if "owner_email" not in columns:
+                
+                cursor.execute(
+                    "ALTER TABLE projects ADD COLUMN owner_email TEXT NOT NULL DEFAULT ''"
+                )
+                cursor.execute(
+                    "UPDATE projects SET owner_email = LOWER(TRIM(contact_email))"
+                )
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS projects (
@@ -59,6 +68,7 @@ def init_db():
             title                  TEXT NOT NULL,
             supervisor_name        TEXT NOT NULL,
             contact_email          TEXT NOT NULL,   -- supervisor email students can reach out to
+            owner_email            TEXT NOT NULL DEFAULT '',  -- account email of the supervisor who submitted it
             description            TEXT NOT NULL,
             required_skills        TEXT NOT NULL,   -- technical skills, comma separated e.g. "Python, SQL"
             languages              TEXT NOT NULL,   -- programming languages, comma separated
@@ -185,6 +195,9 @@ def init_db():
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             sample_projects,
         )
+        # The sample supervisors have no account, so treat their contact address
+        # as the owner: registering with that email adopts the demo project.
+        cursor.execute("UPDATE projects SET owner_email = LOWER(TRIM(contact_email))")
 
     conn.commit()
     conn.close()

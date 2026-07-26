@@ -47,9 +47,16 @@ export default function SubmitProject() {
   const isEditing = Boolean(id)
   // getUser() builds a new object each render, so depend on the email string
   // rather than the object — otherwise the effect below would re-run forever.
-  const userEmail = getUser()?.email || ""
+  const user = getUser()
+  const userEmail = user?.email || ""
 
-  const [form, setForm] = useState(EMPTY_FORM)
+  // Start a new project pre-filled with the supervisor's own details. They can
+  // still change the contact email; ownership is tracked separately.
+  const [form, setForm] = useState(() =>
+    isEditing
+      ? EMPTY_FORM
+      : { ...EMPTY_FORM, supervisor_name: user?.name || "", contact_email: user?.email || "" }
+  )
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   // While editing we wait for the existing project before showing the form.
@@ -67,8 +74,10 @@ export default function SubmitProject() {
         // Only the supervisor who submitted the project may edit it. The
         // backend enforces this too — this check just avoids showing a form
         // that could never be saved.
-        const owner = (project.contact_email || "").toLowerCase()
-        if (!userEmail || owner !== userEmail.toLowerCase()) {
+        const owner = (project.owner_email || project.contact_email || "")
+          .trim()
+          .toLowerCase()
+        if (!userEmail || owner !== userEmail.trim().toLowerCase()) {
           setError("You can only edit your own projects.")
           return
         }
@@ -102,7 +111,14 @@ export default function SubmitProject() {
     event.preventDefault()
     setError("")
 
-    // Basic validation 
+    // Without an account email the project would have no owner, so it could
+    // never be edited or deleted afterwards.
+    if (!userEmail) {
+      setError("Please log in as a supervisor before submitting a project.")
+      return
+    }
+
+    // Basic validation
     if (form.title.trim().length < 3) {
       setError("Please enter a project title.")
       return
@@ -135,7 +151,7 @@ export default function SubmitProject() {
         await api.updateProject(id, form, userEmail)
         navigate("/dashboard")
       } else {
-        await api.createProject(form)
+        await api.createProject(form, userEmail)
         navigate("/dashboard")
       }
     } catch (err) {
@@ -230,6 +246,10 @@ export default function SubmitProject() {
                   onChange={(e) => update("contact_email", e.target.value)}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Shown to students. The project stays under &quot;My Projects&quot;
+                  for {userEmail || "your account"} whichever address you use here.
+                </p>
               </div>
 
               <div className="grid gap-2">
