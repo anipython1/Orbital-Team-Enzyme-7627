@@ -238,15 +238,14 @@ Convergence
 
 
 
-## Developer Testing/ User testing
-
+User/Developer Testing
 Developer testing was carried out by the development team where the developers act as the end user and
 exercise the fully integrated application (React frontend + FastAPI backend +
 SQLite database) end-to-end through the real interface, rather than testing
 functions in isolation, university students also helped to test the overall website and give their opinions
 
 
-### Test environment
+Test environment 
 
 - Backend running locally- `uvicorn main:app --reload` on `http://localhost:8000`
 - Frontend running locally- `npm run dev` on `http://localhost:5173`
@@ -254,16 +253,10 @@ functions in isolation, university students also helped to test the overall webs
 - Browser- Chrome (primary), with Firefox and Edge used for cross-browser checks
 - Each test case was run from a clean state (cleared `localStorage`, fresh DB where noted)
 
-### Result summary
 
-- 19 test cases were executed against the integrated system
-- Status = 1 means Pass, status =0 means Fail
-- 17 passed and 2 failed 
----
+1. Navigation & public access (ST= system test) , Let 1= True and 0= False
 
-### 1. Navigation & public access (ST= system test)
-
-- **ST-01 Landing page and navigation links**
+- ST-01 Landing page and navigation links
   - *Steps:* Open `http://localhost:5173/`, then use the Login, Register and Back to Home links
   - *Expected:*  section and the three feature cards render with no console errors; each link routes to the correct page
   - *Status:* **1**
@@ -273,7 +266,7 @@ functions in isolation, university students also helped to test the overall webs
   - *Expected:* `/explore` lists all 8 seeded projects; no login is required
   - *Status:* **1**
 
-### 2. Registration (`/register`)
+2. Registration (`/register`)
 
 - **ST-03 Register successfully in all three roles**
   - *Steps:* Register a student, a supervisor and an admin with valid details
@@ -307,7 +300,7 @@ functions in isolation, university students also helped to test the overall webs
   - *Expected:* Both return HTTP 401 with the same generic "Incorrect email or password." message, so the response does not reveal which field was wrong
   - *Status:* **1**
 
-### 4. Student profiling & project matching (`/dashboard`)
+4. Student profiling & project matching (`/dashboard`)
 
 - **ST-09 Matching returns correctly ranked results**
   - *Steps:* As a student, search with Skills I have = `Python, Machine Learning`, then again with `React, JavaScript` + interest `web development`
@@ -374,49 +367,44 @@ functions in isolation, university students also helped to test the overall webs
   - *Status:* **0**
 
 
----
-
-### Known limitations of developer testing
+Known limitations of developer testing
 
 - Developers already know the intended path through the system, so these tests are biased toward the "happy path"
 - Usability problems (confusing labels, unclear next steps) are hard for the developers to judge, because they designed the interface
 - Some issues only appear under realistic scale and concurrency, which manual local testing cannot reproduce
 
-
-
----
-
-## Overall Limitations & Future Work
+Overall Limitations & Future Work
 
 The current build is a working prototype that delivers the  core features
 end-to-end. The limitations below are the known gaps in the delivered system,
 each paired with the work planned to address it.
 
-### 1. Matching algorithm
+1. Matching algorithm
 
-- Matching is keyword-based rather than NLP- `calculate_match()` splits the input on commas and compares substrings, so it has no understanding of meaning: "ML" does not match "Machine Learning", and "JS" does not match "JavaScript"
+- Matching is keyword-based rather than NLP- calculate_match splits the input on commas and compares substrings, so it has no understanding of meaning: "ML" does not match "Machine Learning", and "JS" does not match "JavaScript"
 - Substring comparison also over-matches, because a short input can be contained in an unrelated skill
 - The 70/30 split between skill match and description match is a fixed assumption that has never been validated against real student outcomes
 - The interest score saturates after 3 matching keywords, so a very strong interest scores the same as a moderate one
-- **Future work:** move to whole-keyword matching with a synonym and abbreviation dictionary, then to semantic matching  and tune the weights from real feedback
 
-### 2. Features from the project that can be implemented in future
+- Future work:move to whole-keyword matching with a synonym and abbreviation dictionary, then to semantic matching  and tune the weights from real feedback
 
-- **Skill gap analysis** - projects list their required skills, but the system never computes the difference against the student's profile
-- **Coursera/datacamp course recommendation** - recommend courses based on those lacking that is relevant to project
-- **Real-time demand heatmap** - the statistics page counts domain keywords across projects, but students cannot register interest in a specific project, so actual demand is not measured and maybe include colours heatmap
-- **Teammate discovery, plain-language explanations, and automatic keyword tagging** -  some FYP project in some universities allowed partnering up so we can implement a find a  suitable partner feature in future
+2. Features that can be implemented in future
+
+- Skill gap analysis - projects list their required skills, but the system never computes the difference against the student's profile
+- Coursera/datacamp course recommendation - recommend courses based on those lacking that is relevant to project
+- Real-time demand heatmap - the statistics page counts domain keywords across projects, but students cannot register interest in a specific project, so actual demand is not measured and maybe include colours heatmap
+- Teammate discovery, plain-language explanations, and automatic keyword tagging -  some FYP project in some universities allowed partnering up so we can implement a find a  suitable partner feature in future
 
 
-### 3. Data model, project management & scale
+3. Data model, project management & scale (Supervisor editing is completed)
 
 - The supervisor-to-project link is a soft link on an email string rather than a foreign key, so a project can be submitted under any email and the link breaks if a supervisor changes address
 - Supervisors can now edit and delete their own projects, but ownership is checked by comparing the caller's email against `contact_email`- because there is no auth token, that email is supplied by the client and could be forged by calling the API directly
 - Admins still cannot moderate or remove submissions made by other people
 - Skills are stored as a single comma-separated text field, which makes accurate querying and filtering impossible
 - SQLite is a single file with limited concurrent-write support, adequate for a prototype only
-- **Future work:** add a real foreign key and project ownership, add PUT/DELETE endpoints with a "My Projects" view, normalise skills into their own table, filter and paginate at the database level, and migrate to PostgreSQL for deployment
 
+- Future work: add a real foreign key and project ownership, add PUT/DELETE endpoints with a "My Projects" view, normalise skills into their own table, filter and paginate at the database level, and migrate to PostgreSQL for deployment
 
 
 ### FOR PERSONAL USE
